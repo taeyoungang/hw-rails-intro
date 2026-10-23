@@ -7,18 +7,25 @@ class MoviesController < ApplicationController
     @all_ratings = Movie.distinct.pluck(:rating).compact.sort
 
     # ratings_to_show is for checkboxes
-    if params[:ratings].nil?
-      @ratings_to_show = @all_ratings
-    else
-      @ratings_to_show = params[:ratings].keys
+    # first save the preference in cookie session[]
+    if params[:ratings_submitted] == "1"
+      session[:ratings] = params[:ratings]&.keys || []
+    elsif params[:ratings].present?
+      session[:ratings] = params[:ratings].keys
     end
 
-    # sort_by: prevents nil value
-    @sort_by = %w[title release_date].include?(params[:sort_by]) ? 
-    params[:sort_by] : "title"
+    # then set ratings_to_show accordingly.
+    @ratings_to_show = session[:ratings] || @all_ratings # if session[:ratings] is nil, default to listing all ratings.
+
+    # sort_by: only updates session when a new value for params[:sort_by] is submitted
+    if %w[title release_date].include?(params[:sort_by])
+      session[:sort_by] = params[:sort_by]
+    end
+
+    @sort_by = session[:sort_by] || "title" # if session[:sort_by] is nil, default to title.
     
     # this is actual movie retrieval.
-    @movies = Movie.with_ratings(params[:ratings]&.keys).order(@sort_by => :asc)
+    @movies = Movie.with_ratings(session[:ratings]).order(@sort_by => :asc)
   end
 
   # GET /movies/1 or /movies/1.json
