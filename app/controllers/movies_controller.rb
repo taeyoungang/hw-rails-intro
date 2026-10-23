@@ -12,9 +12,13 @@ class MoviesController < ApplicationController
     else
       @ratings_to_show = params[:ratings].keys
     end
+
+    # sort_by: prevents nil value
+    @sort_by = %w[title release_date].include?(params[:sort_by]) ? 
+    params[:sort_by] : "title"
     
     # this is actual movie retrieval.
-    @movies = Movie.with_ratings(params[:ratings]&.keys)
+    @movies = Movie.with_ratings(params[:ratings]&.keys).order(@sort_by => :asc)
   end
 
   # GET /movies/1 or /movies/1.json
