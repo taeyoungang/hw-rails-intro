@@ -3,7 +3,18 @@ class MoviesController < ApplicationController
 
   # GET /movies or /movies.json
   def index
-    @movies = Movie.all
+    # get all possible ratings
+    @all_ratings = Movie.distinct.pluck(:rating).compact.sort
+
+    # ratings_to_show is for checkboxes
+    if params[:ratings].nil?
+      @ratings_to_show = @all_ratings
+    else
+      @ratings_to_show = params[:ratings].keys
+    end
+    
+    # this is actual movie retrieval.
+    @movies = Movie.with_ratings(params[:ratings]&.keys)
   end
 
   # GET /movies/1 or /movies/1.json
